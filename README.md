@@ -8,6 +8,6 @@ This is a simple Agar.io clone built using HTML5 Canvas and JavaScript. Move you
 - Avoid larger dots to prevent losing.
 - The game ends when your circle becomes half the size of the canvas.
 
-Enjoy playing this simple clone of the popular Agar.io game! Either pull down this code and open `index.html` in your browser, or use the version on my web site at [http://pandagario.curtisgibby.com](http://pandagario.curtisgibby.com).
+Enjoy playing this simple clone of the popular Agar.io game! Either pull down this code and open `index.html` in your browser, or use the version on my web site at [http://pandagario.curtisgibby.com](https://pandagario.curtisgibby.com).
 
 ![Pandagario](pandagario.gif)
