@@ -9,3 +9,5 @@ This is a simple Agar.io clone built using HTML5 Canvas and JavaScript. Move you
 - The game ends when your circle becomes half the size of the canvas.
 
 Enjoy playing this simple clone of the popular Agar.io game!
+
+![Pandagario](pandagario.gif)
