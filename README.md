@@ -1,4 +1,4 @@
-# Agar.io Clone
+# Pandagario
 
 This is a simple Agar.io clone built using HTML5 Canvas and JavaScript. Move your circle using the arrow keys and gobble up the dots to grow larger. Avoid larger dots to survive!
 
