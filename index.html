@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pandagario</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Chewy&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <style>
+        canvas {
+            border: 1px solid #599D15;
+            display: block;
+            margin: 0 auto;
+            background-color: #F7FFE5;
+        }
+        h1 {
+            font-family: 'Chewy', cursive;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center; color: #599D15;">Pandagario</h1>
+    <p style="text-align: center;">Use the arrow keys or WASD to move your panda and gobble up the dots. Your panda will grow as you consume more dots. Try to keep going as long as you can!</p>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        const gameCanvas = document.getElementById('gameCanvas');
+        gameCanvas.width = window.innerWidth * 0.95;
+        gameCanvas.height = window.innerHeight * 0.85;
+    </script>
+    <script src="game.js"></script>
+</body>
+</html>
