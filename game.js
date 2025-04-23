@@ -201,11 +201,10 @@ function resetGame() {
 function updateDots() {
     // Track dots that have been consumed this frame
     let consumedDots = new Set();
-    
+    let explosionsThisFrame = [];
     dots.forEach((dot, index) => {
         // Skip if this dot has already been consumed
         if (consumedDots.has(index)) return;
-        
         // Apply gravity from larger dots only
         for (let i = 0; i < dots.length; i++) {
             if (i !== index && dots[i].radius > dot.radius && !consumedDots.has(i)) {
@@ -213,7 +212,6 @@ function updateDots() {
                 const dx = dots[i].x - dot.x;
                 const dy = dots[i].y - dot.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
-                
                 // Apply gravity if within range (larger dots have greater range)
                 const gravityRange = dots[i].radius * 5;
                 if (distance < gravityRange) {
@@ -225,7 +223,6 @@ function updateDots() {
                 }
             }
         }
-        
         // Apply speed limit to prevent dots from moving too fast
         const speed = Math.sqrt(dot.dx * dot.dx + dot.dy * dot.dy);
         const maxSpeed = 2;
@@ -258,18 +255,21 @@ function updateDots() {
                         const growthReduction = Math.max(0.55, 1 - (dot.radius / 90)); // Reduce base growth more aggressively
                         dot.radius += dots[i].radius / 2.5 * growthReduction; // Split the difference between /2 and /3
                         consumedDots.add(i);
+                        explosionsThisFrame.push({consumed: dots[i], consumer: dot});
                     } else if (dot.radius < dots[i].radius) {
                         // Balanced growth reduction for enemy dots
                         const growthReduction = Math.max(0.55, 1 - (dots[i].radius / 90)); // Reduce base growth more aggressively
                         dots[i].radius += dot.radius / 2.5 * growthReduction; // Split the difference between /2 and /3
                         consumedDots.add(index);
+                        explosionsThisFrame.push({consumed: dot, consumer: dots[i]});
                         break;
                     }
                 }
             }
         }
     });
-    
+    // Trigger explosions for consumed dots
+    explosionsThisFrame.forEach(pair => triggerExplosion(pair.consumed, pair.consumer));
     // Remove consumed dots (in reverse order to avoid index issues)
     const consumedIndices = Array.from(consumedDots).sort((a, b) => b - a);
     for (const index of consumedIndices) {
@@ -301,6 +301,73 @@ function drawLoseMessage() {
     ctx.fillText('Press Enter to try again', canvas.width / 2, canvas.height / 2 + 24);
 }
 
+// --- Explosion Effect System ---
+let explosions = [];
+
+function triggerExplosion(consumedDot, consumerDot) {
+    const numParticles = 8;
+    const particles = [];
+    for (let i = 0; i < numParticles; i++) {
+        const angle = (2 * Math.PI * i) / numParticles;
+        const speed = Math.random() * 2 + 1;
+        particles.push({
+            x: consumedDot.x,
+            y: consumedDot.y,
+            radius: Math.max(2, consumedDot.radius / 3 + Math.random() * 1.5),
+            color: consumedDot.color,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            progress: 0, // 0 to 1
+        });
+    }
+    explosions.push({
+        particles,
+        consumedDot,
+        consumerDot,
+        timer: 0,
+        duration: 30, // frames
+    });
+}
+
+function updateExplosions() {
+    for (let e = explosions.length - 1; e >= 0; e--) {
+        const explosion = explosions[e];
+        explosion.timer++;
+        const t = explosion.timer / explosion.duration;
+        // Animate particles
+        explosion.particles.forEach(p => {
+            if (t < 0.5) {
+                // First half: move outward
+                p.x += p.vx * (1 - t * 2);
+                p.y += p.vy * (1 - t * 2);
+            } else {
+                // Second half: curve toward consumerDot
+                const tx = explosion.consumerDot.x;
+                const ty = explosion.consumerDot.y;
+                p.x += (tx - p.x) * 0.18;
+                p.y += (ty - p.y) * 0.18;
+            }
+        });
+        if (explosion.timer >= explosion.duration) {
+            explosions.splice(e, 1);
+        }
+    }
+}
+
+function drawExplosions() {
+    explosions.forEach(explosion => {
+        explosion.particles.forEach(p => {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = 0.7;
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+            ctx.closePath();
+        });
+    });
+}
+
 function update() {
     if (gameOver) {
         if (player.radius >= Math.min(canvas.width, canvas.height) / 2) { 
@@ -323,8 +390,10 @@ function update() {
 
     drawPlayer();
     drawDots();
+    drawExplosions(); // Draw explodey effect
 
     updateDots();
+    updateExplosions(); // Update explodey effect
 
     // Track if we're going to lose this frame
     let playerLoses = false;
@@ -337,6 +406,7 @@ function update() {
                 const baseGrowthFactor = 1 / (1 + player.radius / 47.5); // Less aggressive reduction (was 45)
                 const playerGrowthReduction = Math.max(0.38, 1 - (player.radius / 57.5)); // Increased minimum from 0.36 to 0.38
                 player.radius += dot.radius * baseGrowthFactor * playerGrowthReduction * 0.95; // 5% reduction instead of 10%
+                triggerExplosion(dot, player); // Player eats dot: explodey!
                 return false; // Remove the dot
             } else {
                 // Instead of setting gameOver immediately, track that we'll lose after rendering
